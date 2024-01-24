@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=61.0", "setuptools_scm[toml]>=6.2", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+# version = "0.0.1"  # Remove any existing version parameter.
+dynamic = ["version"]
+name = "NTNU_EG_Internship"
+authors = [
+    {name = "Morten Fredriksen", email = "morfre@equinor.com"},
+]
+readme = "README.md"
+dependencies = [
+    "pandapower",
+    "pytest",
+    "numba==0.56.4",
+    "requests",
+    "numba",
+    "numpy>=1.22.3,<1.23.0",
+    "pydantic>=1.9.0,<2.0.0",
+    "utm",
+    "matplotlib",
+    "python-tsp",
+    "shapely",
+    "ortools",
+    "reportlab",
+    "python-igraph",
+    "ipython",
+    "ipykernel",
+    "ipywidgets",
+    "plotly",
+    "nbformat",
+    "gitpython",
+    "numba",
+    "openpyxl",
+    "plotly",
+]
+
+
+[tool.setuptools_scm]
+# version can be written to python code for tracibility
+# write_to = "src/NTNU_EG_Internship/_version.py"
+
+[tool.pytest.ini_options]
+pythonpath = "."
+
+
+addopts = [
+
+"--import-mode=importlib",
+
+]
