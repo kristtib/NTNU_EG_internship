@@ -53,3 +53,4 @@ loading_percentages = network.res_line["loading_percent"]
 plt.plot(line_names, loading_percentages)
 plt.show()
 print(network)
+pp.diagnostic(net=network)
