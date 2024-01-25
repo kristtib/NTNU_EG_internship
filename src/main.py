@@ -42,7 +42,7 @@ for i in range(0, 8):
     )
 
 
-pp.create_ext_grid(net=network, bus=9)
+pp.create_ext_grid(net=network, bus=network.bus.iloc[-1].name)
 pp.runpp(net=network, algorithm="nr", run_control=True, numba=True)
 
 pp.plotting.to_html(net=network, filename="test.html")
