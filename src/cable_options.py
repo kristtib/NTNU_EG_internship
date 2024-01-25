@@ -23,12 +23,31 @@ def add_cable_to_pp_net_library(net, cable):
 
 
 def add_cables_to_std_library(net):
-    export_cable_245kV_1000mm2_CU = {
-        "name": "245kv_1000mm2_cu",
-        "r_ohm_per_km": 0.027458539530619,
-        "x_ohm_per_km": 0.119380520836412,
-        "c_nf_per_km": 190,
-        "max_i_ka": 0.9672101038734946,
-        "q_mm2": 1000,
-    }
-    add_cable_to_pp_net_library(net, export_cable_245kV_1000mm2_CU)
+    cables = [
+        {
+            "name": "245kv_1000mm2_cu",
+            "r_ohm_per_km": 0.027458539530619,
+            "x_ohm_per_km": 0.119380520836412,
+            "c_nf_per_km": 190,
+            "max_i_ka": 0.9672101038734946,
+            "q_mm2": 1000,
+        },
+        {
+            "name": "245kv_1200mm2_cu",
+            "r_ohm_per_km": 0.021337578768921,
+            "x_ohm_per_km": 0.114969724750772,
+            "c_nf_per_km": 204.04,
+            "max_i_ka": 1.0224576113299597,
+            "q_mm2": 1200,
+        },
+        {
+            "name": "245kv_1200mm2_al",
+            "r_ohm_per_km": 0.029548550501489,
+            "x_ohm_per_km": 0.116644193635135,
+            "c_nf_per_km": 198.71,
+            "max_i_ka": 0.8984247966775813,
+            "q_mm2": 1200,
+        },
+    ]
+    for cable in cables:
+        add_cable_to_pp_net_library(net, cable)
