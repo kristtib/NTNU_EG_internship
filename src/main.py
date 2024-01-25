@@ -38,7 +38,6 @@ for i in range(0, 8):
         from_bus=1 + i,
         to_bus=2 + i,
         std_type="245kv_1000mm2_cu",
-        # std_type="490-AL1/64-ST1A 110.0",
         length_km=10,
     )
 
