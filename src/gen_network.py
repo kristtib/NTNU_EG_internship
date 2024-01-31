@@ -54,6 +54,7 @@ def generate_basic_network(sgen_p= float, sgen_q = float, total_line_length = fl
     pp.create_transformer(
         net=network, lv_bus=network.bus.iloc[-2].name, hv_bus=network.bus.iloc[-1].name, std_type="ONS_tx_400kV_230kV_400MVA"
     )
+    pp.control.ContinuousTapControl(net=network, tid=1, side='lv', vm_lower_pu=0.98, vm_upper_pu=1.02,vm_set_pu=1)
 
     pp.create_ext_grid(net=network, bus=network.bus.iloc[-1].name)
     pp.runpp(net=network, algorithm="nr", run_control=True, numba=True)
@@ -74,9 +75,8 @@ def line_current_plot(sgen_p= float, sgen_q = list, total_line_length = float, p
         plt.plot(line_names, line_currents, label=f"Q={q}[MVAr]")
     plt.legend(loc="upper right")
     plt.grid()
-    
-    
-     
+    plt.show()
+   
 def p_q_plot(sgen_p= float, sgen_q = list, total_line_length = float, per_line_length = float):
     plt.figure()
     plt.xlabel('Q_sys [MVAr]')
@@ -97,7 +97,29 @@ def p_q_plot(sgen_p= float, sgen_q = list, total_line_length = float, per_line_l
     plt.grid()
     plt.show()
 
-list_of_q = range(-100,-50,10)
-line_current_plot(400,list_of_q,80,1)
-p_q_plot(400,list_of_q,80,1)
+def p_q_ons_ofs_plot(sgen_p= float, sgen_q = float, total_line_length = float, per_line_length = float):
+    plt.figure()
+    plt.xlabel('Q [MVAr]')
+    plt.ylabel('P [MW]')
+
+    active_powers = []
+    reactive_powers_ons = []
+    reactive_powers_ofs = []
+    step_p = int(sgen_p/10)
+    for i in range (0,sgen_p+step_p,step_p):
+            network = generate_basic_network(sgen_p=i, sgen_q=sgen_q, total_line_length=total_line_length, per_line_length=per_line_length)
+            active_powers.append(i)
+            reactive_powers_ofs.append(network.res_line.iloc[0].q_from_mvar)
+            reactive_powers_ons.append(network.res_line.iloc[-1].q_to_mvar)
+
+    plt.plot(reactive_powers_ons, active_powers, label=f"Q_ons[MVAr]")
+    plt.plot(reactive_powers_ofs, active_powers, linestyle="dashed", label=f"Q_ofs [MVAr]")
+    plt.legend(loc="upper right")
+    plt.grid()
+    plt.show()
+
+#list_of_q = range(-50,50,10)
+#line_current_plot(400,list_of_q,80,10)
+#p_q_plot(400,list_of_q,80,1)
+p_q_ons_ofs_plot(400,0,80,1)
 #n = generate_basic_network()
