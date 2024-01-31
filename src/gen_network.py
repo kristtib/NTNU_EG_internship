@@ -1,5 +1,6 @@
 import pandapower as pp
 import numpy as np
+import matplotlib.pyplot as plt
 from cable_options import add_cables_to_std_library
 
 def generate_basic_network():
@@ -8,7 +9,7 @@ def generate_basic_network():
     bus1 = pp.create_bus(
         network,
         name="bus1",
-        vn_kv=66,
+        vn_kv=100,
         type="b",
     ).item()
     bus2 = pp.create_bus(
@@ -18,15 +19,15 @@ def generate_basic_network():
         type="b",
     ).item()
 
-    gen1 = pp.create_sgen(net=network, bus=bus1, p_mw=300,q_mvar=0)
+    gen1 = pp.create_sgen(net=network, bus=bus1, p_mw=300,q_mvar=-10)
     trafo1 = pp.create_transformer(
         net=network, lv_bus=bus1, hv_bus=bus2, std_type="100 MVA 220/110 kV"
     )
 
-    for i in range(0, 10):
+    for i in range(0, 8):
         pp.create_bus(
             network,
-            name="bus" + str(network.bus.iloc[-1].name + 1),
+            name="bus" + str(network.bus.iloc[-1].name + 2),
             vn_kv=230,
             type="b",
         ).item()
@@ -41,19 +42,19 @@ def generate_basic_network():
             length_km=10,
         )
     
-    pp.create_bus(
-            network,
-            name="bus" + str(network.bus.iloc[-1].name + 1),
-            vn_kv=400,
-            type="b",
-        ).item()
-
-    trafo2 = pp.create_transformer(
-        net=network, lv_bus=network.bus.iloc[-2].name, hv_bus=network.bus.iloc[-1].name, std_type="160 MVA 380/110 kV"
-    )
+    
 
     pp.create_ext_grid(net=network, bus=network.bus.iloc[-1].name)
     pp.runpp(net=network, algorithm="nr", run_control=True, numba=True)
 
     return network
 
+def line_current_plot(network):
+    line_names = network.line["name"]
+    line_currents = network.res_line["i_ka"]
+    plt.plot(line_names, line_currents)
+    plt.show()
+    
+
+n = generate_basic_network()
+line_current_plot(n)
