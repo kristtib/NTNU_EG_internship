@@ -46,6 +46,23 @@ def calculate_q_cable_distributed_pi(network):
 
     return Q_prod
 
+def calculate_q_cable_simplified(network):
+    omega=2*math.pi*50
+    V=230 #kV
+
+    c_km=network.line.at[0,"c_nf_per_km"]*10**-9
+    tot_km=sum(network.line.length_km)
+    x_c=1/(omega*c_km*tot_km)
+    Q_c=(V**2)/x_c
+
+    S=complex(network.sgen.at[0, "p_mw"],0) #MVA
+    I=abs((S/V).conjugate())
+    
+    x_l=network.line.at[0,"x_ohm_per_km"]*tot_km
+    Q_l=(I**2)*x_l
+
+    return Q_c-Q_l
+
 
 def plot_cable_Q(network):
     plt.figure()
