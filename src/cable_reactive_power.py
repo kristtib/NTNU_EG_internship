@@ -6,13 +6,24 @@ import cmath
 
 from gen_network import generate_basic_network
 
-def calculate_simplified_q_cable(network, V_r, I_r):
+def calculate_q_cable_distributed_pi(network):
+    #Find V_r, I_r, S_r at ONS point
+    v_r_mag=network.res_line.vm_to_pu.iloc[-1]*230 #kV
+    v_r_angle=network.res_line.va_to_degree.iloc[-1]
+    p_r=-network.res_line.p_to_mw.iloc[-1]
+    q_r=-network.res_line.q_to_mvar.iloc[-1]
+            
+    V_r=complex(v_r_mag*cmath.cos(math.radians(v_r_angle)), v_r_mag*cmath.sin(math.radians(v_r_angle)))
+    S_r=complex(p_r,q_r) #MVA
+    I_r=S_r.conjugate()/V_r.conjugate() #kA
+
+    #Calculate parameters for distributed PI model
     f=50
     omega=2*math.pi*f
     
     y=complex(0,omega*network.line.at[0,"c_nf_per_km"]*10**-9)
     z=complex(network.line.at[0,"r_ohm_per_km"], network.line.at[0,"x_ohm_per_km"])
-    l=sum(network.line["length_km"])
+    l=network.line.at[0,"length_km"]
 
     Z_c=cmath.sqrt(z/y)
     gamma=cmath.sqrt(y*z)
@@ -21,10 +32,19 @@ def calculate_simplified_q_cable(network, V_r, I_r):
     B=Z_c*cmath.sinh(gamma*l)
     C=(cmath.sinh(gamma*l))/Z_c
 
+    #Iterate for each cable segment
+    for i in range(len(network.line)):
     V_s=A*V_r + B*I_r
     I_s=C*V_r + D*I_r
     
-    return V_s,I_s
+        V_r=V_s
+        I_r=I_s
+    
+    #Calculate S_s on OFS point
+    S_s=V_s*I_s.conjugate()
+    Q_prod=(S_r-S_s).imag #find the reactive power produced in the cable
+
+    return Q_prod
 
 
 def plot_cable_Q(network):
