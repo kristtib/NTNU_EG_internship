@@ -49,7 +49,6 @@ def p_q_plot(sgen_p= float, sgen_q = list):
     plt.ylabel('P_in [MW]')
 
     network = generate_basic_network(sgen_p, sgen_q = 0)
-
     #simplified_Q = simplified_Q_trafo(sgen_p, sgen_q, k, S_base)
     for q in sgen_q:
         k = network.trafo.vk_percent/100
@@ -72,6 +71,7 @@ def p_q_plot(sgen_p= float, sgen_q = list):
     plt.legend(loc="lower left")
     plt.grid()
     plt.show()
+
 
 
 def p_q_plot1(sgen_p=float, sgen_q=list):
@@ -119,4 +119,5 @@ def p_q_plot1(sgen_p=float, sgen_q=list):
 list_of_q = range(-100,101,50)
 
 p_q_plot1(400,list_of_q)
+
 
