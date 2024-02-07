@@ -49,7 +49,6 @@ def p_q_plot(sgen_p= float, sgen_q = list):
     plt.ylabel('P_in [MW]')
 
     network = generate_basic_network(sgen_p, sgen_q = 0)
-   
     #simplified_Q = simplified_Q_trafo(sgen_p, sgen_q, k, S_base)
     for q in sgen_q:
         k = network.trafo.vk_percent/100
@@ -74,8 +73,51 @@ def p_q_plot(sgen_p= float, sgen_q = list):
     plt.show()
 
 
+
+def p_q_plot1(sgen_p=float, sgen_q=list):
     
+    fig, (ax1, ax2) = plt.subplots(2,1, figsize=(10, 8))
+    ax1.set_xlabel('Q_trafo [MVAr]')
+    ax1.set_ylabel('P_in [MW]')
+    ax2.set_xlabel('Q_trafo [MVAr]')
+    ax2.set_ylabel('Difference (simplified - Load Flow) [MVAr]')
+
+    network = generate_basic_network(sgen_p, sgen_q=0)
+
+    k = network.trafo.vk_percent / 100
+    S_base = network.trafo.sn_mva
+    simplified_Q = []
+    step_p = int(sgen_p / 10)
+    for i in range(0, sgen_p + step_p, step_p):
+        simplified_Q.append(simplified_Q_trafo(i, sgen_q, k, S_base))
+
+    ax1.plot(simplified_Q, range(0, sgen_p + step_p, step_p), label=f"Q_trafo simplified [MVAr]", color ='black', linewidth ='3')
+    
+    for q in sgen_q:
+        network.sgen.q_mvar.iloc[0] = q
+        active_powers = []
+        reactive_powers = []   
+        delta = []  # Initialize delta for each sgen_q
+        step_p = int(sgen_p / 10)
+        for i in range(0, sgen_p + step_p, step_p):
+            network.sgen.p_mw.iloc[0] = i
+            pp.runpp(net=network, algorithm="nr", run_control=True, numba=True)
+            active_powers.append(i)
+            reactive_powers.append(network.res_bus.iloc[-1].q_mvar - q)
+            difference = simplified_Q_trafo(i, q, k, S_base) - (network.res_bus.iloc[-1].q_mvar - q)
+            delta.append(difference)
+        ax1.plot(reactive_powers, active_powers, label=f"Q_trafo with load flow analysis, Q_in={q}[MVAr]")
+        ax2.plot(active_powers, delta, label=f"Difference (simplified - Load Flow) Q_trafo, Q_in={q}[MVAr]")
+
+    ax1.legend(loc="lower left")
+    ax1.grid()
+    ax2.legend(loc="upper right")
+    ax2.grid()
+    plt.tight_layout()
+    plt.show()
+
 list_of_q = range(-100,101,50)
 
-p_q_plot(400,list_of_q)
+p_q_plot1(400,list_of_q)
+
 
