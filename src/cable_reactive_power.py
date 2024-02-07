@@ -34,9 +34,9 @@ def calculate_q_cable_distributed_pi(network):
 
     #Iterate for each cable segment
     for i in range(len(network.line)):
-    V_s=A*V_r + B*I_r
-    I_s=C*V_r + D*I_r
-    
+        V_s=A*V_r + B*I_r
+        I_s=C*V_r + D*I_r
+
         V_r=V_s
         I_r=I_s
     
@@ -56,7 +56,7 @@ def calculate_q_cable_simplified(network):
     Q_c=(V**2)/x_c
 
     S=complex(network.sgen.at[0, "p_mw"],0) #MVA
-    I=abs((S/V).conjugate())
+    I=abs((S/1).conjugate())
     
     x_l=network.line.at[0,"x_ohm_per_km"]*tot_km
     Q_l=(I**2)*x_l
@@ -64,55 +64,72 @@ def calculate_q_cable_simplified(network):
     return Q_c-Q_l
 
 
-def plot_cable_Q(network):
-    plt.figure()
-    plt.xlabel('Self-generated reactive power in cable [MVar]')
-    plt.ylabel('Active power [MW]')
 
-    q_step=10
+def plot_cable_Q(network):
+    #Define figures
+    fig, (ax1, ax2) = plt.subplots(2)
+    ax1.set_title("Self-generated reactive power in cable")
+    ax1.set_xlabel("Q [MVar]")
+    ax1.set_ylabel("P [MW]")
+    ax1.grid()
+
+    ax2.set_title("Error of simplified model")
+    ax2.set_xlabel("P [MW]")
+    ax2.set_ylabel("Error [%]")
+    ax2.grid()
+
+    #Define step sizes for plot
+    q_step=15
     p_step=10
-    for q in range(0,0+q_step,q_step):
+
+    #Add plot of simplified pi model for sgen_q=0
+    q_generated_simplified=[]
+    q_generated_s=[]
+    for p in range(0,int(network.sgen.at[0, "p_mw"])+p_step,p_step):
+        network.sgen.at[0, "q_mvar"]=0
+        network.sgen.at[0,"p_mw"]=p
+        pp.runpp(net=network, algorithm="nr", run_control=True, numba=True)
+        
+        q_produced_simplified =calculate_q_cable_distributed_pi(network)
+        q_generated_simplified.append(q_produced_simplified)
+
+        q_produced_s=calculate_q_cable_simplified(network)
+        q_generated_s.append(q_produced_s)
+    ax1.plot(q_generated_simplified,range(0,int(network.sgen.at[0, "p_mw"])+p_step,p_step),color="black",label=f"Distributed PI model")
+    ax1.plot(q_generated_s,range(0,int(network.sgen.at[0, "p_mw"])+p_step,p_step),label=f"Simplified model")
+
+    #Add plot for LFS for different compensations
+    for q in range(-30,30+q_step,q_step):
         network.sgen.at[0, "q_mvar"]=q #update q generated from sgen
         #network.sgen.q_mvar[0]=q #update q generated from sgen
         
         q_generated=[]
-        q_generated_simplified=[]
-        p_generated=[]
-        p_generated_simplified=[]
         for p in range(0,int(network.sgen.at[0, "p_mw"])+p_step,p_step):
             network.sgen.at[0,"p_mw"]=p
             #network.sgen.p_mw[0]=p #update p generated from sgen
             pp.runpp(net=network, algorithm="nr", run_control=True, numba=True) #run new power flow calculation
 
+            #LFS
             q_in=network.res_line.q_from_mvar[0]
             q_out=network.res_line.q_to_mvar.iloc[-1]
-            q_produced=q_in-q_out-q
+            q_produced=-q_out-q_in
 
-            #Find values to calculate simplified model
-            v_r_mag=network.res_line.vm_to_pu.iloc[-1]*230 #kV
-            v_r_angle=network.res_line.va_to_degree.iloc[-1]
-            
-            v_r=complex(v_r_mag*cmath.cos(math.radians(v_r_angle)), v_r_mag*cmath.sin(math.radians(v_r_angle)))
-            s_r=complex(p,q_produced) #MVA
-            i_r=s_r.conjugate()/v_r.conjugate() #kA
-
-
-            v_s,i_s =calculate_simplified_q_cable(network, V_r=v_r, I_r=i_r)
-            s_s=v_s*i_s.conjugate()
-
+            #Add to lists for plotting
             q_generated.append(q_produced)
-            p_generated.append(p)
-            q_generated_simplified.append((s_s).imag)
-            p_generated_simplified.append((s_s).real)
+        
+        #Find error in percentage
+        error_percent=(np.array(q_generated_simplified)-np.array(q_generated))/np.array(q_generated)            
+        
+        ax1.plot(q_generated,range(0,int(network.sgen.at[0, "p_mw"])+p_step,p_step),label=f"Q_sgen={q}[MVar]")
+        ax2.plot(range(0,int(network.sgen.at[0, "p_mw"])+p_step,p_step),error_percent,label=f"Q_sgen={q}[MVar]")
     
-        plt.plot(q_generated,p_generated,label=f"Q(LFS)")
-        plt.plot(q_generated_simplified,p_generated_simplified,linestyle="dashed",label=f"Q(simplified)")
-    
-    plt.legend(loc="upper right")
-    plt.grid()
+    ax1.legend(loc="upper right")
+    ax2.legend(loc="upper right")
+
+    plt.tight_layout()
     plt.show()
 
-network=generate_basic_network(sgen_p=400,sgen_q=0,total_line_length=70,per_line_length=10)
+network=generate_basic_network(sgen_p=400,sgen_q=0,total_line_length=100,per_line_length=5)
 plot_cable_Q(network)
 #calculate_simplified_q_cable(network)
 
