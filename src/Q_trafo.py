@@ -79,8 +79,8 @@ def p_q_plot1(sgen_p=float, sgen_q=list):
     fig, (ax1, ax2) = plt.subplots(2,1, figsize=(10, 8))
     ax1.set_xlabel('Q_trafo [MVAr]')
     ax1.set_ylabel('P_in [MW]')
-    ax2.set_xlabel('Q_trafo [MVAr]')
-    ax2.set_ylabel('Difference (simplified - Load Flow) [MVAr]')
+    ax2.set_xlabel('P_in [MW]')    
+    ax2.set_ylabel('Difference Q (simplified - Load Flow) [MVAr]')
 
     network = generate_basic_network(sgen_p, sgen_q=0)
 
@@ -107,11 +107,11 @@ def p_q_plot1(sgen_p=float, sgen_q=list):
             difference = simplified_Q_trafo(i, q, k, S_base) - (network.res_bus.iloc[-1].q_mvar - q)
             delta.append(difference)
         ax1.plot(reactive_powers, active_powers, label=f"Q_trafo with load flow analysis, Q_in={q}[MVAr]")
-        ax2.plot(active_powers, delta, label=f"Difference (simplified - Load Flow) Q_trafo, Q_in={q}[MVAr]")
+        ax2.plot(active_powers,delta, label=f"Difference (simplified - Load Flow) Q_trafo, Q_in={q}[MVAr]")
 
     ax1.legend(loc="lower left")
     ax1.grid()
-    ax2.legend(loc="upper right")
+    ax2.legend(loc="upper left")
     ax2.grid()
     plt.tight_layout()
     plt.show()
