@@ -44,6 +44,8 @@ def generate_basic_network(sgen_p= float, sgen_q = float, total_line_length = fl
             # std_type="490-AL1/64-ST1A 110.0",
             length_km=per_line_length,
         )
+
+    pp.create_ext_grid(net=network, bus=network.bus.iloc[-1].name) #to set voltage of bus
     
     pp.create_bus(
             network,
@@ -54,10 +56,10 @@ def generate_basic_network(sgen_p= float, sgen_q = float, total_line_length = fl
     pp.create_transformer(
         net=network, lv_bus=network.bus.iloc[-2].name, hv_bus=network.bus.iloc[-1].name, std_type="ONS_tx_400kV_230kV_400MVA"
     )
-    pp.control.ContinuousTapControl(net=network, tid=1, side='lv', vm_lower_pu=0.98, vm_upper_pu=1.02,vm_set_pu=1)
+    #pp.control.ContinuousTapControl(net=network, tid=1, side='lv', vm_lower_pu=0.98, vm_upper_pu=1.02,vm_set_pu=1)
 
     pp.create_ext_grid(net=network, bus=network.bus.iloc[-1].name)
-    pp.runpp(net=network, algorithm="nr", run_control=True, numba=True)
+    pp.runpp(net=network, algorithm="nr", run_control=False, numba=True)
     pp.plotting.to_html(net=network, filename="test.html")
 
     return network
@@ -121,5 +123,5 @@ def p_q_ons_ofs_plot(sgen_p= float, sgen_q = float, total_line_length = float, p
 #list_of_q = range(-50,50,10)
 #line_current_plot(400,list_of_q,80,10)
 #p_q_plot(400,list_of_q,80,1)
-p_q_ons_ofs_plot(400,0,80,1)
-#n = generate_basic_network()
+#p_q_ons_ofs_plot(400,0,80,1)
+n = generate_basic_network(sgen_p=400, sgen_q=0, total_line_length=70, per_line_length=10)
