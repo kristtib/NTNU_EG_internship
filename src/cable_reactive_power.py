@@ -56,14 +56,12 @@ def calculate_q_cable_simplified(network):
     Q_c=(V**2)/x_c
 
     S=complex(network.sgen.at[0, "p_mw"],0) #MVA
-    I=abs((S/1).conjugate())
+    I=abs((S/(V)).conjugate())
     
     x_l=network.line.at[0,"x_ohm_per_km"]*tot_km
     Q_l=(I**2)*x_l
 
     return Q_c-Q_l
-
-
 
 def plot_cable_Q(network):
     #Define figures
@@ -73,13 +71,13 @@ def plot_cable_Q(network):
     ax1.set_ylabel("P [MW]")
     ax1.grid()
 
-    ax2.set_title("Error of simplified model")
+    ax2.set_title("Error of distributed PI model")
     ax2.set_xlabel("P [MW]")
     ax2.set_ylabel("Error [%]")
     ax2.grid()
 
     #Define step sizes for plot
-    q_step=15
+    q_step=10
     p_step=10
 
     #Add plot of simplified pi model for sgen_q=0
@@ -99,7 +97,7 @@ def plot_cable_Q(network):
     ax1.plot(q_generated_s,range(0,int(network.sgen.at[0, "p_mw"])+p_step,p_step),label=f"Simplified model")
 
     #Add plot for LFS for different compensations
-    for q in range(-30,30+q_step,q_step):
+    for q in range(-10,10+q_step,q_step):
         network.sgen.at[0, "q_mvar"]=q #update q generated from sgen
         #network.sgen.q_mvar[0]=q #update q generated from sgen
         
@@ -129,8 +127,7 @@ def plot_cable_Q(network):
     plt.tight_layout()
     plt.show()
 
-network=generate_basic_network(sgen_p=400,sgen_q=0,total_line_length=100,per_line_length=5)
+network=generate_basic_network(sgen_p=400,sgen_q=0,total_line_length=70,per_line_length=5)
 plot_cable_Q(network)
-#calculate_simplified_q_cable(network)
 
 
