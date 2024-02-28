@@ -41,12 +41,10 @@ def generate_basic_network(sgen_p= float, sgen_q = float, total_line_length = fl
 
 def line_current_plot(network):
     plt.figure()
-    plt.xlabel('line length [km]')
-    plt.ylabel('I [kA]')
+    plt.xlabel('length [km]')
+    plt.ylabel('I [%]')
 
     line_currents=[]
-    line_names=[]
-    q_compensation=0
     comp5050=False
     comp6040=False
     for q in range(-200,200,1):
@@ -64,19 +62,39 @@ def line_current_plot(network):
         error=1e-2 
         if (1-error<=abs((network.res_line["q_from_mvar"].iloc[0])/(network.res_line["q_to_mvar"].iloc[-1])) <= 1+error) and comp5050==False:
             line_currents=network.res_line["i_ka"]
-            line_names=network.line["name"]
 
             comp5050=True
-            plt.plot(line_names, line_currents, label=f"50/50 compensation")
+            plt.plot(line_currents*100/1.0213003186436418,color='red')
+            y1_min,y1_max = plt.ylim()
+            #pp.plotting.to_html(net=network, filename="test.html")
+
+            plt.figure()
+            plt.xlabel('length [km]')
+            plt.ylabel('I [%]')
+            plt.plot(line_currents*100/1.0213003186436418,color='red')
+            plt.ylim(y1_min,y1_max)
+            plt.xticks([])
+
+            print('For 50/50 compensation:')
+            print(f'Q_gen={q}')
+            print(f'Q_from={network.res_line["q_from_mvar"].iloc[0]}')
+            print(f'Q_to={network.res_line["q_to_mvar"].iloc[-1]}')
+            print('\n')
+
 
         error=0.3
         if (60/40)-error <=(abs((network.res_line["q_from_mvar"].iloc[0])/(network.res_line["q_to_mvar"].iloc[-1]))<=(60/40))+error and comp6040==False:
             line_currents=network.res_line["i_ka"]
-            line_names=network.line["name"]
 
             comp6040=True
-            plt.plot(line_names, line_currents, label=f"60/40 compensation") 
+            plt.plot(line_currents*100/1.0213003186436418,color='blue') 
             pp.plotting.to_html(net=network, filename="test.html")
+
+            print('For 60/40 compensation:')
+            print(f'Q_gen={q}')
+            print(f'Q_from={network.res_line["q_from_mvar"].iloc[0]}')
+            print(f'Q_to={network.res_line["q_to_mvar"].iloc[-1]}')
+            print('\n')
         
         if comp5050==True and comp6040==True:
             break
@@ -84,8 +102,7 @@ def line_current_plot(network):
         
     #plt.plot(line_names, line_currents, label=f"Q_sgen={q_compensation}[MVAr]")
     
-    plt.legend(loc="upper right")
-    plt.grid()
+    plt.xticks([])
     plt.show()
 
 network=generate_basic_network(sgen_p=400,sgen_q=0,total_line_length=70,per_line_length=5)
