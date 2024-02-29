@@ -73,7 +73,7 @@ def calculate_q_mv_bus_2(a,b):
     sgen_p=400
     active_powers=[]
     reactive_power_mv_bus=[]
-    step_p=int(sgen_p/10)
+    step_p=int(sgen_p/20)
     for p in range (0,sgen_p+step_p,step_p):
         active_powers.append(p)
         reactive_power=a*(p**2)+b
@@ -118,8 +118,7 @@ def create_three_winding_network():
     ).item()    
     trafo1=pp.create_transformer3w(net=network, hv_bus=bus_hv, mv_bus=bus_mv, lv_bus=bus_lv, std_type="on_tx_400kV_220kV_36kV_450MVA")
     ct.ContinuousTapControl(net=network,tid=trafo1,vm_set_pu=1,side='mv',trafotype='3W')
-    #trafo_tap = pp.create_transformer(net=network, lv_bus = bus_lv, hv_bus = bus_hv, std_type="ONS_tx_400kV_230kV_400MVA")
-    
+
     gen=pp.create_sgen(net=network, bus=bus_mv, p_mw=0,q_mvar=0)
     grid=pp.create_ext_grid(net=network, bus=bus_hv)
     statcom=pp.create_load(net=network,bus=bus_lv,const_i_percent=100,q_mvar=0,p_mw=0)
@@ -162,11 +161,6 @@ def calulate_q_statcom(active_powers=list, sgen_q=float):
 
 def calulate_q_statcom_variableQ(reactive_power_mv_bus=list,active_powers=list):
     network=create_three_winding_network()
-    '''
-    plt.figure()
-    plt.xlabel('Q_statcom [MVAr]')
-    plt.ylabel('P_in [MW]')
-    '''
     
     reactive_power_no_statcom=[]
     for i in range (len(reactive_power_mv_bus)):
@@ -177,6 +171,8 @@ def calulate_q_statcom_variableQ(reactive_power_mv_bus=list,active_powers=list):
 
         reactive_power_no_statcom.append(network.res_bus.iloc[1].q_mvar)  
 
+    pp.plotting.to_html(net=network, filename="test.html")
+
     reactive_powers_min=[]
     network.load.q_mvar.iloc[0]=-150
     for i in range (len(reactive_power_mv_bus)):
@@ -186,6 +182,8 @@ def calulate_q_statcom_variableQ(reactive_power_mv_bus=list,active_powers=list):
 
         reactive_powers_min.append(network.res_bus.iloc[1].q_mvar)
     
+    pp.plotting.to_html(net=network, filename="test.html")
+
     reactive_powers_max=[]
     network.load.q_mvar.iloc[0]=150
     for i in range (len(reactive_power_mv_bus)):
@@ -194,7 +192,9 @@ def calulate_q_statcom_variableQ(reactive_power_mv_bus=list,active_powers=list):
         pp.runpp(net=network, algorithm="nr", run_control=True, numba=True,tolerance_mva=1e-6) 
 
         reactive_powers_max.append(network.res_bus.iloc[1].q_mvar)
-        
+    
+    pp.plotting.to_html(net=network, filename="test.html")
+
     array1=np.array(reactive_power_no_statcom)
     array2=np.array(reactive_powers_min)
     array3=np.array(reactive_powers_max)
@@ -215,16 +215,19 @@ def calulate_q_statcom_variableQ(reactive_power_mv_bus=list,active_powers=list):
 def plot_q_statcom():
     fig, (ax1,ax2) = plt.subplots(2,1)
 
-    for b in range (10,70,10):
-        for a in range (-90, -25, 5):
-            line_color=(random.random(),random.random(),random.random())
+    for i in range(10):
+        a=-random.randint(0,30)
+        b=random.randint(-50,50)
+    #for b in range (40,50,10):
+    #    for a in range (-90, -45, 5):
+        line_color=(random.random(),random.random(),random.random()) #So all the lines showing the same a&b values have the same color
 
-            reactive_power_mv_bus,active_powers=calculate_q_mv_bus_2(a=a*1e-5,b=b)
-            ax1.plot(reactive_power_mv_bus,active_powers,color=line_color)
+        reactive_power_mv_bus,active_powers=calculate_q_mv_bus_2(a=a*1e-5,b=b)
+        ax1.plot(reactive_power_mv_bus,active_powers,color=line_color)
 
-            reactive_power_statcom_min_variableQ, reactive_power_statcom_max_variableQ=calulate_q_statcom_variableQ(reactive_power_mv_bus,active_powers)
-            ax2.plot(reactive_power_statcom_min_variableQ, active_powers, color=line_color, label=f'Variable Q, b={b}, a={a}')
-            ax2.plot(reactive_power_statcom_max_variableQ, active_powers, color=line_color)
+        reactive_power_statcom_min_variableQ, reactive_power_statcom_max_variableQ=calulate_q_statcom_variableQ(reactive_power_mv_bus,active_powers)
+        ax2.plot(reactive_power_statcom_min_variableQ, active_powers, color=line_color, label=f'Variable Q, b={b}, a={a}')
+        ax2.plot(reactive_power_statcom_max_variableQ, active_powers, color=line_color)
     
     sgen_q=0
     reactive_power_statcom_min, reactive_power_statcom_max=calulate_q_statcom(active_powers=active_powers,sgen_q=sgen_q)
@@ -234,6 +237,7 @@ def plot_q_statcom():
     ax1.grid()
     ax2.grid()
     plt.show()
+    plt.legend()
     '''
     for b in range (20,70,10):
         for a in range (-50, -25, 5):
